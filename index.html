@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glassmorphic Music Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --accent: #ff0072;
+            --text-main: #ffffff;
+            --text-dim: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg-gradient);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        /* Glassmorphic Container */
+        .player-card {
+            width: 350px;
+            padding: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 40px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            color: var(--text-main);
+        }
+
+        /* Rotating Vinyl Art */
+        .album-art {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            margin: 0 auto 30px;
+        }
+
+        .album-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 10px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: rotate 12s linear infinite;
+            animation-play-state: paused; /* Starts paused */
+        }
+
+        /* Center hole for the vinyl look */
+        .album-art::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: #1a1a1a;
+            border-radius: 50%;
+            border: 5px solid var(--glass-border);
+        }
+
+        .playing img {
+            animation-play-state: running;
+        }
+
+        .song-info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .song-info p {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            margin-bottom: 30px;
+        }
+
+        /* Progress Bar */
+        .progress-area {
+            height: 6px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: inherit;
+            width: 35%; /* Default progress */
+            background: var(--accent);
+            border-radius: inherit;
+            position: relative;
+        }
+
+        .time-stamps {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 30px;
+        }
+
+        /* Control Buttons */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .btn:hover {
+            color: var(--accent);
+            transform: scale(1.1);
+        }
+
+        .play-pause {
+            width: 70px;
+            height: 70px;
+            background: var(--text-main);
+            color: #764ba2;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .play-pause:hover {
+            transform: scale(1.05);
+            color: var(--accent);
+        }
+
+        /* Animation */
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="player-card">
+        <div class="album-art" id="art-container">
+            <img src="https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=500" alt="Album Art">
+        </div>
+
+        <div class="song-info">
+            <h2 id="title">Neon Nights</h2>
+            <p id="artist">RetroWave Studio</p>
+        </div>
+
+        <div class="progress-area">
+            <div class="progress-bar"></div>
+        </div>
+        <div class="time-stamps">
+            <span>1:45</span>
+            <span>4:20</span>
+        </div>
+
+        <div class="controls">
+            <button class="btn"><i class="fas fa-random"></i></button>
+            <button class="btn"><i class="fas fa-step-backward"></i></button>
+            <button class="btn play-pause" id="main-play">
+                <i class="fas fa-play" id="play-icon"></i>
+            </button>
+            <button class="btn"><i class="fas fa-step-forward"></i></button>
+            <button class="btn"><i class="fas fa-redo"></i></button>
+        </div>
+    </div>
+
+    <script>
+        const playBtn = document.getElementById('main-play');
+        const playIcon = document.getElementById('play-icon');
+        const artContainer = document.getElementById('art-container');
+        
+        let isPlaying = false;
+
+        function togglePlay() {
+            if (!isPlaying) {
+                playIcon.classList.replace('fa-play', 'fa-pause');
+                artContainer.classList.add('playing');
+                isPlaying = true;
+            } else {
+                playIcon.classList.replace('fa-pause', 'fa-play');
+                artContainer.classList.remove('playing');
+                isPlaying = false;
+            }
+        }
+
+        playBtn.addEventListener('click', togglePlay);
+    </script>
+</body>
+</html>
